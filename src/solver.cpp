@@ -34,6 +34,13 @@ namespace sat4gpu {
 
         return v;
     }
+    void Solver::add_vars(int num_of_vars) {
+        int start_idx = int(m_vars.size());
+
+        for (int i = 0; i < num_of_vars; i++) {
+            m_vars.push_back(Var{start_idx + i});
+        }
+    }
 
     Clause Solver::add_clause(Lit a) {
         std::vector<Lit> lits = {a};
@@ -100,6 +107,15 @@ namespace sat4gpu {
     }
     int Solver::num_lits() const {
         return int(m_lit_buffer.size());
+    }
+    const std::vector<Var> &Solver::vars() const {
+        return m_vars;
+    }
+    const std::vector<Clause> &Solver::clauses() const {
+        return m_clauses;
+    }
+    const std::vector<Lit> &Solver::lit_buffer() const {
+        return m_lit_buffer;
     }
 
 }// namespace sat4gpu

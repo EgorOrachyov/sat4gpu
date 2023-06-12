@@ -42,6 +42,9 @@ namespace sat4gpu {
         Lit() = default;
         Lit(Var var, Sign sign = Sign::Positive);
 
+        bool operator==(const Lit &) const;
+        bool operator!=(const Lit &) const;
+
         [[nodiscard]] bool eval(bool var_assignment) const;
 
         [[nodiscard]] Var var() const;

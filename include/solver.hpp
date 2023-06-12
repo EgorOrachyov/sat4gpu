@@ -42,6 +42,7 @@ namespace sat4gpu {
         static constexpr int DEFAULT_TIMEOUT_SEC = 20000;
 
         Var add_var();
+        void add_vars(int num_of_vars);
         Clause add_clause(Lit a);
         Clause add_clause(Lit a, Lit b);
         Clause add_clause(Lit a, Lit b, Lit c);
@@ -55,6 +56,9 @@ namespace sat4gpu {
         [[nodiscard]] int num_vars() const;
         [[nodiscard]] int num_clauses() const;
         [[nodiscard]] int num_lits() const;
+        [[nodiscard]] const std::vector<Var> &vars() const;
+        [[nodiscard]] const std::vector<Clause> &clauses() const;
+        [[nodiscard]] const std::vector<Lit> &lit_buffer() const;
 
     private:
         std::vector<Var> m_vars;

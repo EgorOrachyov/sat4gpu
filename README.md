@@ -81,6 +81,15 @@ $ ./sat4gpu -h
 }
 ```
 
+## References
+
+1. Taisuke Sato, Ryosuke Kojima. **MatSat: a matrix-based differentiable SAT solver.**
+   [arxiv](https://arxiv.org/abs/2108.06481)
+2. **Test cnf files.** 
+   [http](https://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
+3. **Sat-solvers competition.**
+   [http](https://satcompetition.github.io/2022/downloads.html)
+
 ## Project structure
 
 | Entry               | Description                                               |

@@ -22,29 +22,71 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SAT4GPU_COMMON_HPP
-#define SAT4GPU_COMMON_HPP
-
-#include <cmath>
-#include <functional>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include <gtest/gtest.h>
-
-#include "clause.hpp"
 #include "io.hpp"
-#include "lit.hpp"
-#include "solver.hpp"
-#include "var.hpp"
 
-// Put in the end of the unit test file
-#define SAT4GPU_GTEST_MAIN                               \
-    int main(int argc, char *argv[]) {                   \
-        ::testing::GTEST_FLAG(catch_exceptions) = false; \
-        ::testing::InitGoogleTest(&argc, argv);          \
-        return RUN_ALL_TESTS();                          \
+#include <iostream>
+#include <sstream>
+#include <utility>
+
+namespace sat4gpu {
+
+    DimacsLoader::DimacsLoader(Solver &solver, std::filesystem::path filepath)
+        : m_path(std::move(filepath)), m_solver(solver) {
     }
 
-#endif//SAT4GPU_COMMON_HPP
+    bool DimacsLoader::load() {
+        std::fstream file(m_path, std::ios::in);
+
+        if (!file.is_open()) {
+            std::cerr << "failed to open file " << m_path;
+            return false;
+        }
+
+        std::string line;
+
+        while (std::getline(file, line)) {
+            if (!line.empty() && line[0] != 'c') break;
+        }
+
+        if (line.empty() || line[0] != 'p') {
+            std::cerr << "failed parse header of " << m_path;
+            return false;
+        }
+
+        std::stringstream header(line);
+        std::string symbol;
+        std::string format;
+
+        header >> symbol >> format >> m_n_vars >> m_n_clauses;
+
+        if (format != "cnf") {
+            std::cerr << "not supported format " << m_path;
+            return false;
+        }
+
+        m_solver.add_vars(m_n_vars);
+
+        std::vector<Lit> m_temp_literals;
+
+        for (int i = 0; i < m_n_clauses; i++) {
+            m_temp_literals.clear();
+
+            int encoded_var = -1;
+
+            while (encoded_var != 0) {
+                file >> encoded_var;
+
+                if (encoded_var != 0) {
+                    int var_id = (encoded_var > 0 ? encoded_var : -encoded_var) - 1;
+                    Sign var_sign = encoded_var > 0 ? Sign::Positive : Sign::Negative;
+                    m_temp_literals.emplace_back(Var{var_id}, var_sign);
+                }
+            }
+
+            m_solver.add_clause(m_temp_literals);
+        }
+
+        return true;
+    }
+
+}// namespace sat4gpu

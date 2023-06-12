@@ -63,4 +63,32 @@ TEST(solve, naive_unsat) {
     EXPECT_EQ(solution.conclusion, Conclusion::Unsatisfiable);
 }
 
+TEST(solve, naive_dimacs_sat) {
+    using namespace sat4gpu;
+
+    Solver solver;
+    DimacsLoader loader(solver, "../../resource/test_5.cnf");
+
+    EXPECT_TRUE(loader.load());
+
+    Solution solution = solver.solve(Solver::DEFAULT_TIMEOUT_SEC);
+
+    EXPECT_EQ(solution.conclusion, Conclusion::Satisfiable);
+    EXPECT_TRUE(solution.model.has_value());
+    EXPECT_TRUE(solver.eval(solution.model.value()));
+}
+
+TEST(solve, naive_dimacs_unsat) {
+    using namespace sat4gpu;
+
+    Solver solver;
+    DimacsLoader loader(solver, "../../resource/test_6.cnf");
+
+    EXPECT_TRUE(loader.load());
+
+    Solution solution = solver.solve(Solver::DEFAULT_TIMEOUT_SEC);
+
+    EXPECT_EQ(solution.conclusion, Conclusion::Unsatisfiable);
+}
+
 SAT4GPU_GTEST_MAIN

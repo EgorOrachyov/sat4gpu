@@ -22,29 +22,38 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SAT4GPU_COMMON_HPP
-#define SAT4GPU_COMMON_HPP
+#ifndef SAT4GPU_IO_HPP
+#define SAT4GPU_IO_HPP
 
-#include <cmath>
-#include <functional>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include <gtest/gtest.h>
-
-#include "clause.hpp"
-#include "io.hpp"
 #include "lit.hpp"
 #include "solver.hpp"
 #include "var.hpp"
 
-// Put in the end of the unit test file
-#define SAT4GPU_GTEST_MAIN                               \
-    int main(int argc, char *argv[]) {                   \
-        ::testing::GTEST_FLAG(catch_exceptions) = false; \
-        ::testing::InitGoogleTest(&argc, argv);          \
-        return RUN_ALL_TESTS();                          \
-    }
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <vector>
 
-#endif//SAT4GPU_COMMON_HPP
+namespace sat4gpu {
+
+    class DimacsLoader {
+    public:
+        DimacsLoader(Solver &solver, std::filesystem::path filepath);
+
+        bool load();
+
+        [[nodiscard]] const std::filesystem::path &path() const { return m_path; }
+        [[nodiscard]] Solver &solver() const { return m_solver; }
+        [[nodiscard]] int n_vars() const { return m_n_vars; }
+        [[nodiscard]] int n_clauses() const { return m_n_clauses; }
+
+    private:
+        std::filesystem::path m_path;
+        Solver &m_solver;
+        int m_n_vars = 0;
+        int m_n_clauses = 0;
+    };
+
+}// namespace sat4gpu
+
+#endif//SAT4GPU_IO_HPP

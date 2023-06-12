@@ -22,29 +22,33 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SAT4GPU_COMMON_HPP
-#define SAT4GPU_COMMON_HPP
+#include "common.hpp"
 
-#include <cmath>
-#include <functional>
-#include <iostream>
-#include <string>
-#include <vector>
+TEST(io, dimacs) {
+    using namespace sat4gpu;
 
-#include <gtest/gtest.h>
+    Solver solver;
+    DimacsLoader loader(solver, "../../resource/test_5.cnf");
 
-#include "clause.hpp"
-#include "io.hpp"
-#include "lit.hpp"
-#include "solver.hpp"
-#include "var.hpp"
+    EXPECT_TRUE(loader.load());
 
-// Put in the end of the unit test file
-#define SAT4GPU_GTEST_MAIN                               \
-    int main(int argc, char *argv[]) {                   \
-        ::testing::GTEST_FLAG(catch_exceptions) = false; \
-        ::testing::InitGoogleTest(&argc, argv);          \
-        return RUN_ALL_TESTS();                          \
-    }
+    EXPECT_EQ(loader.n_vars(), 5);
+    EXPECT_EQ(loader.n_clauses(), 2);
 
-#endif//SAT4GPU_COMMON_HPP
+    EXPECT_EQ(solver.clauses()[0].count(), 5);
+    EXPECT_EQ(solver.clauses()[1].count(), 5);
+
+    EXPECT_EQ(solver.clauses()[0].lits()[0], Var{0});
+    EXPECT_EQ(solver.clauses()[0].lits()[1], Var{1});
+    EXPECT_EQ(solver.clauses()[0].lits()[2], Var{2});
+    EXPECT_EQ(solver.clauses()[0].lits()[3], Var{3});
+    EXPECT_EQ(solver.clauses()[0].lits()[4], Var{4});
+
+    EXPECT_EQ(solver.clauses()[1].lits()[0], -Var{0});
+    EXPECT_EQ(solver.clauses()[1].lits()[1], -Var{1});
+    EXPECT_EQ(solver.clauses()[1].lits()[2], -Var{2});
+    EXPECT_EQ(solver.clauses()[1].lits()[3], -Var{3});
+    EXPECT_EQ(solver.clauses()[1].lits()[4], Var{4});
+}
+
+SAT4GPU_GTEST_MAIN

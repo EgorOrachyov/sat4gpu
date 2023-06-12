@@ -32,6 +32,13 @@ namespace sat4gpu {
         x = var.id * 2 + int(sign);
     }
 
+    bool Lit::operator==(const sat4gpu::Lit &lit) const {
+        return x == lit.x;
+    }
+    bool Lit::operator!=(const sat4gpu::Lit &lit) const {
+        return x != lit.x;
+    }
+
     bool Lit::eval(bool var_assignment) const {
         assert(is_valid());
 

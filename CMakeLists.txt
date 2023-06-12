@@ -146,6 +146,7 @@ endif ()
 
 add_library(sat4gpu STATIC
         include/backend.hpp
+        include/io.hpp
         include/clause.hpp
         include/lit.hpp
         include/solution.hpp
@@ -155,6 +156,7 @@ add_library(sat4gpu STATIC
         src/cpu_naive_comb_backend.hpp
         src/cuda_backend.cu
         src/cuda_backend.cuh
+        src/io.cpp
         src/clause.cpp
         src/lit.cpp
         src/solver.cpp)
