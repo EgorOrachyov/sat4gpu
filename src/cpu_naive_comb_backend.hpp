@@ -22,37 +22,33 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SAT4GPU_BACKEND_HPP
-#define SAT4GPU_BACKEND_HPP
+#ifndef SAT4GPU_CPU_NAIVE_COMB_BACKEND_HPP
+#define SAT4GPU_CPU_NAIVE_COMB_BACKEND_HPP
 
-#include "clause.hpp"
-#include "lit.hpp"
-#include "solution.hpp"
-#include "var.hpp"
-
-#include <memory>
-#include <vector>
+#include "backend.hpp"
+#include "solver.hpp"
 
 namespace sat4gpu {
 
-    enum class BackendType {
-        CpuNaiveComb = 0,
-        CpuNaiveLinAlg,
-        GpuCudaLinAlg,
-        Custom
-    };
-
-    class Backend {
+    class CpuNaiveCombBackend final : public Backend {
     public:
-        virtual ~Backend() = default;
+        ~CpuNaiveCombBackend() override = default;
 
-        virtual void configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) = 0;
-        virtual Solution solve(int timeout) = 0;
+        void configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) override;
+        Solution solve(int timeout) override;
 
-        [[nodiscard]] virtual BackendType backend_type() const = 0;
-        [[nodiscard]] virtual std::shared_ptr<Backend> instantiate() const = 0;
+        [[nodiscard]] BackendType backend_type() const override;
+        [[nodiscard]] std::shared_ptr<Backend> instantiate() const override;
+
+    private:
+        bool try_solve_recursive(int var_idx);
+
+    private:
+        std::vector<Var> m_vars;
+        std::vector<Clause> m_clauses;
+        std::vector<bool> m_try_assignment;
     };
 
 }// namespace sat4gpu
 
-#endif//SAT4GPU_BACKEND_HPP
+#endif//SAT4GPU_CPU_NAIVE_COMB_BACKEND_HPP

@@ -14,7 +14,7 @@ Minimalistic high-performance SAT solver with GPU acceleration.
     - CMake (the latest version)
     - Ninja (as build files generator)
     - Python 3.7+
-    - Nvidia Cuda SDK v10 or greater
+    - Nvidia Cuda SDK v11 or greater
 - **Windows 10**:
     - Microsoft Visual C++ Compiler (MSVC) with C++17 support
     - x64 Native Tools Command Prompt for VS

@@ -33,7 +33,7 @@ TEST(api, formula) {
     Var y = solver.add_var();
     Var z = solver.add_var();
 
-    solver.add_clause({Lit(x, sat4gpu::Sign::Positive), Lit(y, sat4gpu::Sign::Negative), Lit(z, sat4gpu::Sign::Negative)});
+    solver.add_clause({Lit(x, Sign::Positive), Lit(y, Sign::Negative), Lit(z, Sign::Negative)});
 }
 
 TEST(api, eval) {
@@ -46,8 +46,8 @@ TEST(api, eval) {
     Var z = solver.add_var();
     Var w = solver.add_var();
 
-    solver.add_clause({Lit(x, sat4gpu::Sign::Positive), Lit(y, sat4gpu::Sign::Negative)});
-    solver.add_clause({Lit(z, sat4gpu::Sign::Positive), Lit(w, sat4gpu::Sign::Negative)});
+    solver.add_clause({Lit(x, Sign::Positive), Lit(y, Sign::Negative)});
+    solver.add_clause({Lit(z, Sign::Positive), Lit(w, Sign::Negative)});
 
     EXPECT_TRUE(solver.eval({true, false, true, false}));
 

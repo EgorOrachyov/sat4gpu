@@ -32,8 +32,14 @@
 
 namespace sat4gpu {
 
+    enum class Conclusion {
+        Satisfiable,
+        Unsatisfiable,
+        DontKnow
+    };
+
     struct Solution {
-        std::optional<int> timeout;
+        Conclusion conclusion = Conclusion::DontKnow;
         std::optional<std::vector<bool>> model;
     };
 

@@ -40,7 +40,7 @@ namespace sat4gpu {
         int x = -1;
 
         Lit() = default;
-        Lit(Var var, Sign sign);
+        Lit(Var var, Sign sign = Sign::Positive);
 
         [[nodiscard]] bool eval(bool var_assignment) const;
 
@@ -50,6 +50,14 @@ namespace sat4gpu {
         [[nodiscard]] bool is_valid() const;
         [[nodiscard]] bool is_invalid() const;
     };
+
+    inline Lit operator-(const Var &var) {
+        return Lit(var).to_neg();
+    }
+
+    inline Lit operator-(const Lit &lit) {
+        return lit.to_neg();
+    }
 
 }// namespace sat4gpu
 

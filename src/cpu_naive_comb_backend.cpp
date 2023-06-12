@@ -22,37 +22,66 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SAT4GPU_BACKEND_HPP
-#define SAT4GPU_BACKEND_HPP
+#include "cpu_naive_comb_backend.hpp"
 
-#include "clause.hpp"
-#include "lit.hpp"
-#include "solution.hpp"
-#include "var.hpp"
-
-#include <memory>
-#include <vector>
+#include <cassert>
 
 namespace sat4gpu {
 
-    enum class BackendType {
-        CpuNaiveComb = 0,
-        CpuNaiveLinAlg,
-        GpuCudaLinAlg,
-        Custom
-    };
+    void CpuNaiveCombBackend::configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) {
+        m_vars = vars;
+        m_clauses = clauses;
+    }
+    Solution CpuNaiveCombBackend::solve(int timeout) {
+        m_try_assignment.clear();
+        m_try_assignment.resize(m_vars.size(), false);
 
-    class Backend {
-    public:
-        virtual ~Backend() = default;
+        const bool is_solved = try_solve_recursive(0);
 
-        virtual void configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) = 0;
-        virtual Solution solve(int timeout) = 0;
+        Solution solution;
+        solution.conclusion = is_solved ? Conclusion::Satisfiable : Conclusion::Unsatisfiable;
+        solution.model = is_solved ? std::optional(m_try_assignment) : std::nullopt;
 
-        [[nodiscard]] virtual BackendType backend_type() const = 0;
-        [[nodiscard]] virtual std::shared_ptr<Backend> instantiate() const = 0;
-    };
+        return solution;
+    }
+    bool CpuNaiveCombBackend::try_solve_recursive(int var_idx) {
+        assert(var_idx <= m_vars.size());
+
+        if (var_idx == m_vars.size()) {
+            auto iter = m_clauses.begin();
+            const auto iter_end = m_clauses.end();
+
+            while (iter != iter_end) {
+                const Clause &clause = *iter;
+
+                if (!clause.eval(m_try_assignment)) {
+                    return false;
+                }
+
+                ++iter;
+            }
+
+            return true;
+        }
+
+        m_try_assignment[var_idx] = true;
+        if (try_solve_recursive(var_idx + 1)) {
+            return true;
+        }
+
+        m_try_assignment[var_idx] = false;
+        if (try_solve_recursive(var_idx + 1)) {
+            return true;
+        }
+
+        return false;
+    }
+    BackendType CpuNaiveCombBackend::backend_type() const {
+        return BackendType::CpuNaiveComb;
+    }
+    std::shared_ptr<Backend> CpuNaiveCombBackend::instantiate() const {
+        return std::make_shared<CpuNaiveCombBackend>();
+    }
+
 
 }// namespace sat4gpu
-
-#endif//SAT4GPU_BACKEND_HPP

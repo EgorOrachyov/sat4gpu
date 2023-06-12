@@ -24,6 +24,8 @@
 
 #include "solver.hpp"
 
+#include "cpu_naive_comb_backend.hpp"
+
 namespace sat4gpu {
 
     Var Solver::add_var() {
@@ -33,6 +35,18 @@ namespace sat4gpu {
         return v;
     }
 
+    Clause Solver::add_clause(Lit a) {
+        std::vector<Lit> lits = {a};
+        return add_clause(lits);
+    }
+    Clause Solver::add_clause(Lit a, Lit b) {
+        std::vector<Lit> lits = {a, b};
+        return add_clause(lits);
+    }
+    Clause Solver::add_clause(Lit a, Lit b, Lit c) {
+        std::vector<Lit> lits = {a, b, c};
+        return add_clause(lits);
+    }
     Clause Solver::add_clause(const std::vector<Lit> &lits) {
         int offset = int(m_lit_buffer.size());
         m_lit_buffer.resize(m_lit_buffer.size() + lits.size());
@@ -43,8 +57,22 @@ namespace sat4gpu {
         return clause;
     }
 
-    Solution Solver::solve(int timeout) {
-        return Solution();
+    Solution Solver::solve(int timeout, BackendType backend_type) {
+        std::shared_ptr<Backend> backend;
+
+        switch (backend_type) {
+            case BackendType::CpuNaiveComb:
+                backend = std::make_shared<CpuNaiveCombBackend>();
+                break;
+            default:
+                return Solution{};
+        }
+
+        return solve(timeout, backend);
+    }
+    Solution Solver::solve(int timeout, const std::shared_ptr<Backend> &backend) {
+        backend->configure(m_vars, m_clauses);
+        return backend->solve(timeout);
     }
 
     bool Solver::eval(const std::vector<bool> &assignment) const {

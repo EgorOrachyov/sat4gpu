@@ -39,9 +39,16 @@ namespace sat4gpu {
 
     class Solver {
     public:
+        static constexpr int DEFAULT_TIMEOUT_SEC = 20000;
+
         Var add_var();
+        Clause add_clause(Lit a);
+        Clause add_clause(Lit a, Lit b);
+        Clause add_clause(Lit a, Lit b, Lit c);
         Clause add_clause(const std::vector<Lit> &lits);
-        Solution solve(int timeout);
+
+        Solution solve(int timeout, BackendType backend_type = BackendType::CpuNaiveComb);
+        Solution solve(int timeout, const std::shared_ptr<Backend> &backend);
 
         [[nodiscard]] bool eval(const std::vector<bool> &assignment) const;
 

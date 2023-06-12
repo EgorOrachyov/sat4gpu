@@ -7,3 +7,4 @@ function(test_target target)
 endfunction()
 
 test_target(test_api)
+test_target(test_solve)

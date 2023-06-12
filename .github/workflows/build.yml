@@ -10,6 +10,8 @@ on:
       - '.github/**'
       - 'include/**'
       - 'src/**'
+      - 'app/**'
+      - 'test/**'
       - 'CMakeLists.txt'
   pull_request:
     branches: [ main ]

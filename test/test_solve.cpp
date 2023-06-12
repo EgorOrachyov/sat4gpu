@@ -22,37 +22,45 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SAT4GPU_BACKEND_HPP
-#define SAT4GPU_BACKEND_HPP
+#include "common.hpp"
 
-#include "clause.hpp"
-#include "lit.hpp"
-#include "solution.hpp"
-#include "var.hpp"
+TEST(solve, naive_sat) {
+    using namespace sat4gpu;
 
-#include <memory>
-#include <vector>
+    Solver solver;
 
-namespace sat4gpu {
+    Var x = solver.add_var();
+    Var y = solver.add_var();
+    Var z = solver.add_var();
+    Var w = solver.add_var();
 
-    enum class BackendType {
-        CpuNaiveComb = 0,
-        CpuNaiveLinAlg,
-        GpuCudaLinAlg,
-        Custom
-    };
+    solver.add_clause(-x);
+    solver.add_clause(-y);
+    solver.add_clause(z, -w);
 
-    class Backend {
-    public:
-        virtual ~Backend() = default;
+    Solution solution = solver.solve(Solver::DEFAULT_TIMEOUT_SEC);
 
-        virtual void configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) = 0;
-        virtual Solution solve(int timeout) = 0;
+    EXPECT_EQ(solution.conclusion, Conclusion::Satisfiable);
+    EXPECT_TRUE(solution.model.has_value());
+    EXPECT_TRUE(solver.eval(solution.model.value()));
+}
 
-        [[nodiscard]] virtual BackendType backend_type() const = 0;
-        [[nodiscard]] virtual std::shared_ptr<Backend> instantiate() const = 0;
-    };
+TEST(solve, naive_unsat) {
+    using namespace sat4gpu;
 
-}// namespace sat4gpu
+    Solver solver;
 
-#endif//SAT4GPU_BACKEND_HPP
+    Var x = solver.add_var();
+    Var y = solver.add_var();
+
+    solver.add_clause(x);
+    solver.add_clause(-x);
+    solver.add_clause(y);
+    solver.add_clause(-y);
+
+    Solution solution = solver.solve(Solver::DEFAULT_TIMEOUT_SEC);
+
+    EXPECT_EQ(solution.conclusion, Conclusion::Unsatisfiable);
+}
+
+SAT4GPU_GTEST_MAIN
