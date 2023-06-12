@@ -30,16 +30,9 @@ namespace sat4gpu {
     struct Var {
         int id = -1;
 
-        [[nodiscard]] bool is_valid() const;
-        [[nodiscard]] bool is_invalid() const;
+        [[nodiscard]] bool is_valid() const { return id >= 0; }
+        [[nodiscard]] bool is_invalid() const { return id == -1; }
     };
-
-    bool Var::is_valid() const {
-        return id >= 0;
-    }
-    bool Var::is_invalid() const {
-        return id == -1;
-    }
 
 }// namespace sat4gpu
 

@@ -39,14 +39,17 @@ namespace sat4gpu {
 
     class Solver {
     public:
-        Var add_var(const std::string &name);
+        Var add_var();
         Clause add_clause(const std::vector<Lit> &lits);
-
         Solution solve(int timeout);
 
+        [[nodiscard]] bool eval(const std::vector<bool> &assignment) const;
+
+        [[nodiscard]] int num_vars() const;
+        [[nodiscard]] int num_clauses() const;
+        [[nodiscard]] int num_lits() const;
+
     private:
-        std::unordered_map<std::string, Var> m_map_name_to_var;
-        std::unordered_map<Var, std::string> m_map_var_to_name;
         std::vector<Var> m_vars;
         std::vector<Clause> m_clauses;
         std::vector<Lit> m_lit_buffer;

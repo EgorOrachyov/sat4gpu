@@ -26,16 +26,52 @@
 
 namespace sat4gpu {
 
-    Var Solver::add_var(const std::string &name) {
-        return Var();
+    Var Solver::add_var() {
+        Var v{int(m_vars.size())};
+        m_vars.push_back(v);
+
+        return v;
     }
 
     Clause Solver::add_clause(const std::vector<Lit> &lits) {
-        return Clause({}, 0, nullptr);
+        int offset = int(m_lit_buffer.size());
+        m_lit_buffer.resize(m_lit_buffer.size() + lits.size());
+
+        Clause clause(lits, offset, &m_lit_buffer);
+        m_clauses.push_back(clause);
+
+        return clause;
     }
 
     Solution Solver::solve(int timeout) {
         return Solution();
+    }
+
+    bool Solver::eval(const std::vector<bool> &assignment) const {
+        bool satisfied = true;
+
+        auto iter = m_clauses.begin();
+        const auto iter_end = m_clauses.end();
+
+        while (iter != iter_end && satisfied) {
+            const Clause &clause = *iter;
+
+            satisfied = clause.eval(assignment);
+
+            ++iter;
+        }
+
+        return satisfied;
+    }
+
+    int Solver::num_vars() const {
+        return int(m_vars.size());
+    }
+    int Solver::num_clauses() const {
+        return int(m_clauses.size());
+    }
+    int Solver::num_lits() const {
+        return int(m_lit_buffer.size());
     }
 
 }// namespace sat4gpu

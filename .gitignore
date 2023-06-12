@@ -5,3 +5,6 @@ cmake-build-relwithdebinfo
 
 # idea
 .idea
+
+# python cache files
+/**/__pycache__

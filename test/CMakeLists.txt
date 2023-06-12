@@ -1,0 +1,9 @@
+function(test_target target)
+    message(STATUS "Add test ${target}")
+    add_executable(${target} ${target}.cpp)
+    target_link_libraries(${target} PRIVATE sat4gpu)
+    target_link_libraries(${target} PRIVATE gtest)
+    target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+endfunction()
+
+test_target(test_api)

@@ -39,7 +39,10 @@ namespace sat4gpu {
     struct Lit {
         int x = -1;
 
+        Lit() = default;
         Lit(Var var, Sign sign);
+
+        [[nodiscard]] bool eval(bool var_assignment) const;
 
         [[nodiscard]] Var var() const;
         [[nodiscard]] Sign sign() const;
@@ -47,36 +50,6 @@ namespace sat4gpu {
         [[nodiscard]] bool is_valid() const;
         [[nodiscard]] bool is_invalid() const;
     };
-
-    Lit::Lit(Var var, Sign sign) {
-        assert(var.is_valid());
-
-        x = var.id * 2 + int(sign);
-    }
-
-    Var Lit::var() const {
-        assert(is_valid());
-
-        return {x / 2};
-    }
-    Sign Lit::sign() const {
-        assert(is_valid());
-
-        return static_cast<Sign>(x % 2);
-    }
-    Lit Lit::to_neg() const {
-        assert(is_valid());
-
-        return {var(), static_cast<Sign>(((x % 2) + 1) % 2)};
-    }
-
-    bool Lit::is_valid() const {
-        return x >= 0;
-    }
-    bool Lit::is_invalid() const {
-        return x == -1;
-    }
-
 
 }// namespace sat4gpu
 

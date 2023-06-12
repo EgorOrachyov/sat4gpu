@@ -35,30 +35,25 @@ namespace sat4gpu {
 
     class Clause {
     public:
-        Clause(const std::vector<Lit> &lits, int offset, Lit *lit_buffer);
+        Clause(const std::vector<Lit> &lits, int offset, std::vector<Lit> *lit_buffer);
+
+        [[nodiscard]] bool eval(const std::vector<bool> &assignments) const;
+
+        [[nodiscard]] Lit *begin();
+        [[nodiscard]] Lit *end();
+        [[nodiscard]] const Lit *begin() const;
+        [[nodiscard]] const Lit *end() const;
 
         [[nodiscard]] int offset() const { return m_offset; }
         [[nodiscard]] int count() const { return m_count; }
-        [[nodiscard]] Lit *lit_buffer() const { return m_lit_buffer; }
+        [[nodiscard]] Lit *lits() const { return m_lit_buffer->data() + m_offset; }
+        [[nodiscard]] Lit *lit_buffer() const { return m_lit_buffer->data(); }
 
     private:
         int m_offset = -1;
         int m_count = 0;
-        Lit *m_lit_buffer = nullptr;
+        std::vector<Lit> *m_lit_buffer = nullptr;
     };
-
-    Clause::Clause(const std::vector<Lit> &lits, int offset, Lit *lit_buffer) {
-        assert(lit_buffer);
-        assert(!lits.empty());
-
-        m_offset = offset;
-        m_count = int(lits.size());
-        m_lit_buffer = lit_buffer;
-
-        for (int i = 0; i < m_count; i++) {
-            lit_buffer[i] = lits[i];
-        }
-    }
 
 }// namespace sat4gpu
 
