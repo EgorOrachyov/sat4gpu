@@ -22,57 +22,44 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include "clause.hpp"
+#ifndef SAT4GPU_CPU_MATSAT_FUNCS_HPP
+#define SAT4GPU_CPU_MATSAT_FUNCS_HPP
 
-#include <algorithm>
+#include "backend.hpp"
+#include "clause.hpp"
+#include "cpu_structs.hpp"
+#include "math.hpp"
+
+#include <random>
+#include <vector>
 
 namespace sat4gpu {
 
-    Clause::Clause(const std::vector<Lit> &lits, int offset, std::vector<Lit> *lit_buffer) {
-        assert(lit_buffer);
-        assert(!lits.empty());
+    class MatSat {
+    public:
+        static void build_matrix_Q(const std::vector<Clause> &clauses, int num_vars, int num_lits, CpuMat &Q);
 
-        m_offset = offset;
-        m_count = int(lits.size());
-        m_lit_buffer = lit_buffer;
+        static void build_matrix_Q2_Q1_T(const std::vector<Clause> &clauses, int num_vars, int num_lits, CpuMatBit &Q2_Q1_T);
 
-        for (int i = 0; i < m_count; i++) {
-            (*lit_buffer)[m_offset + i] = lits[i];
-        }
+        static void eval_vec_norm_F_2(const CpuVec &v, float &v_norm_F_2);
 
-        std::sort(lit_buffer->data() + m_offset, lit_buffer->data() + m_offset + m_count);
-    }
+        static void eval_matvec_Q_u_tilda_d(const CpuMat &Q, const CpuVec &u_tilde, CpuVec &Q_u_tilda_d);
 
-    bool Clause::eval(const std::vector<bool> &assignments) const {
-        bool satisfied = false;
+        static void eval_J_sat(const CpuVec &u_tilda, const CpuMat &Q, const CpuVec &Q_u_tilda_d, float l, float &J_sat);
 
-        auto iter = begin();
-        const auto iter_end = end();
+        static void eval_J_sat_acb(const CpuMatBit &Q2_Q1_T, const CpuVec &u_tilda, const CpuVec &Q_u_tilda_d, float l, CpuVec &J_sat_acb);
 
-        while (iter != iter_end && !satisfied) {
-            const Lit &lit = *iter;
-            const Var lit_var = lit.var();
-            const bool var_assignment = assignments[lit_var.id];
+        static void eval_u_tilda_new(const CpuVec &u_tilda, const CpuVec &J_sat_acb, float J_sat, CpuVec &u_tilda_new);
 
-            satisfied = lit.eval(var_assignment);
+        static void eval_u_by_u_tilda(const CpuVec &u_tilda, float theta, CpuVecBit &u);
 
-            ++iter;
-        }
+        static void eval_matvec_Q_u_d_error(const CpuMat &Q, const CpuVecBit &u, int &error);
 
-        return satisfied;
-    }
+        static void eval_matvec_Q_u_d_min_error(const CpuMat &Q, const CpuVec &u_tilda, float theta_slice, CpuVecBit &u, int &error);
 
-    Lit *Clause::begin() {
-        return m_lit_buffer->data() + m_offset;
-    }
-    Lit *Clause::end() {
-        return m_lit_buffer->data() + m_offset + m_count;
-    }
-    const Lit *Clause::begin() const {
-        return m_lit_buffer->data() + m_offset;
-    }
-    const Lit *Clause::end() const {
-        return m_lit_buffer->data() + m_offset + m_count;
-    }
+        static void randomize_vec_uniform(float beta, std::default_random_engine &engine, CpuVec &v);
+    };
 
 }// namespace sat4gpu
+
+#endif//SAT4GPU_CPU_MATSAT_FUNCS_HPP

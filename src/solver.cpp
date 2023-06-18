@@ -24,7 +24,8 @@
 
 #include "solver.hpp"
 
-#include "cpu_naive_comb_backend.hpp"
+#include "cpu_comb_backend.hpp"
+#include "cpu_matsat_backend.hpp"
 
 namespace sat4gpu {
 
@@ -68,8 +69,11 @@ namespace sat4gpu {
         std::shared_ptr<Backend> backend;
 
         switch (backend_type) {
-            case BackendType::CpuNaiveComb:
-                backend = std::make_shared<CpuNaiveCombBackend>();
+            case BackendType::CpuComb:
+                backend = std::make_shared<CpuCombBackend>();
+                break;
+            case BackendType::CpuMatsat:
+                backend = std::make_shared<CpuMatsatBackend>();
                 break;
             default:
                 return Solution{};
@@ -78,7 +82,7 @@ namespace sat4gpu {
         return solve(timeout, backend);
     }
     Solution Solver::solve(int timeout, const std::shared_ptr<Backend> &backend) {
-        backend->configure(m_vars, m_clauses);
+        backend->configure(*this);
         return backend->solve(timeout);
     }
 

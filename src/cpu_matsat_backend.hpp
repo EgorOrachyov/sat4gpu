@@ -22,57 +22,55 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include "clause.hpp"
+#ifndef SAT4GPU_CPU_MATSAT_BACKEND_HPP
+#define SAT4GPU_CPU_MATSAT_BACKEND_HPP
 
-#include <algorithm>
+#include "backend.hpp"
+#include "cpu_structs.hpp"
+#include "math.hpp"
+#include "solver.hpp"
+
+#include <cinttypes>
+#include <random>
+#include <vector>
 
 namespace sat4gpu {
 
-    Clause::Clause(const std::vector<Lit> &lits, int offset, std::vector<Lit> *lit_buffer) {
-        assert(lit_buffer);
-        assert(!lits.empty());
+    class CpuMatsatBackend : public Backend {
+    public:
+        ~CpuMatsatBackend() override = default;
 
-        m_offset = offset;
-        m_count = int(lits.size());
-        m_lit_buffer = lit_buffer;
+        void configure(const class Solver &solver) override;
+        Solution solve(int timeout) override;
 
-        for (int i = 0; i < m_count; i++) {
-            (*lit_buffer)[m_offset + i] = lits[i];
-        }
+        [[nodiscard]] BackendType backend_type() const override;
+        [[nodiscard]] std::shared_ptr<Backend> instantiate() const override;
 
-        std::sort(lit_buffer->data() + m_offset, lit_buffer->data() + m_offset + m_count);
-    }
+        [[nodiscard]] int &uniform_seed() { return m_uniform_seed; }
+        [[nodiscard]] int &max_try() { return m_max_try; }
+        [[nodiscard]] int &max_itr() { return m_max_itr; }
+        [[nodiscard]] float &theta_slice() { return m_theta_slice; }
+        [[nodiscard]] float &beta() { return m_beta; }
 
-    bool Clause::eval(const std::vector<bool> &assignments) const {
-        bool satisfied = false;
+    private:
+        int m_uniform_seed = 137483;// uniform distribution randomization
+        int m_max_try = 200;        // outer loop max iterations
+        int m_max_itr = 5;          // inner loop max iterations
+        float m_theta_slice = 200;  // num steps to threshold to binary vector level
+        float m_beta = 0.5f;        // randomization mix
+        float m_l = 0.01;           // l norm weigh
 
-        auto iter = begin();
-        const auto iter_end = end();
-
-        while (iter != iter_end && !satisfied) {
-            const Lit &lit = *iter;
-            const Var lit_var = lit.var();
-            const bool var_assignment = assignments[lit_var.id];
-
-            satisfied = lit.eval(var_assignment);
-
-            ++iter;
-        }
-
-        return satisfied;
-    }
-
-    Lit *Clause::begin() {
-        return m_lit_buffer->data() + m_offset;
-    }
-    Lit *Clause::end() {
-        return m_lit_buffer->data() + m_offset + m_count;
-    }
-    const Lit *Clause::begin() const {
-        return m_lit_buffer->data() + m_offset;
-    }
-    const Lit *Clause::end() const {
-        return m_lit_buffer->data() + m_offset + m_count;
-    }
+        CpuMat m_Q;          // cnf matrix in binary form
+        CpuMatBit m_Q2_Q1_T; // packed dif with 2-bits per entry
+        CpuVecBit m_u;       // result bit vec u
+        CpuVec m_Q_u_tilda_d;// cached mem for Qu~d product
+        CpuVec m_u_tilda;    // current floating u solution
+        CpuVec m_u_tilda_new;// new floating u solution
+        CpuVec m_J_sat_acb;  // every iter evaluated grad
+        float m_J_sat;       // every iter evaluated error
+        int m_error = 0;     // num of unsat clauses
+    };
 
 }// namespace sat4gpu
+
+#endif//SAT4GPU_CPU_MATSAT_BACKEND_HPP

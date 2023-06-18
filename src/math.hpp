@@ -22,57 +22,41 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include "clause.hpp"
+#ifndef SAT4GPU_MATH_HPP
+#define SAT4GPU_MATH_HPP
 
-#include <algorithm>
+#include <cinttypes>
+#include <cmath>
 
 namespace sat4gpu {
 
-    Clause::Clause(const std::vector<Lit> &lits, int offset, std::vector<Lit> *lit_buffer) {
-        assert(lit_buffer);
-        assert(!lits.empty());
+    static constexpr int BITS_CAPACITY = 32;
+    static constexpr int BITS_DIV_BIT = BITS_CAPACITY / 1;
 
-        m_offset = offset;
-        m_count = int(lits.size());
-        m_lit_buffer = lit_buffer;
-
-        for (int i = 0; i < m_count; i++) {
-            (*lit_buffer)[m_offset + i] = lits[i];
-        }
-
-        std::sort(lit_buffer->data() + m_offset, lit_buffer->data() + m_offset + m_count);
+    inline int align(int size, int alignment) {
+        return ((size + alignment - 1) / alignment) * alignment;
     }
 
-    bool Clause::eval(const std::vector<bool> &assignments) const {
-        bool satisfied = false;
-
-        auto iter = begin();
-        const auto iter_end = end();
-
-        while (iter != iter_end && !satisfied) {
-            const Lit &lit = *iter;
-            const Var lit_var = lit.var();
-            const bool var_assignment = assignments[lit_var.id];
-
-            satisfied = lit.eval(var_assignment);
-
-            ++iter;
-        }
-
-        return satisfied;
+    inline int get_bitset_num_entries(int size) {
+        return size / BITS_DIV_BIT + (size % BITS_DIV_BIT ? 1 : 0);
     }
 
-    Lit *Clause::begin() {
-        return m_lit_buffer->data() + m_offset;
+    inline int get_bitset_bit(const int *buffer, int idx) {
+        const unsigned int entry_idx = idx / BITS_DIV_BIT;
+        const unsigned int bit_shift = idx % BITS_DIV_BIT;
+
+        return (buffer[entry_idx] >> bit_shift) & 0x1;
     }
-    Lit *Clause::end() {
-        return m_lit_buffer->data() + m_offset + m_count;
-    }
-    const Lit *Clause::begin() const {
-        return m_lit_buffer->data() + m_offset;
-    }
-    const Lit *Clause::end() const {
-        return m_lit_buffer->data() + m_offset + m_count;
+
+    inline void set_bitset_bit(int *buffer, int idx, int val) {
+        const unsigned int entry_idx = idx / BITS_DIV_BIT;
+        const unsigned int bit_shift = idx % BITS_DIV_BIT;
+
+        const int mask = ~(0x1 << bit_shift);
+
+        buffer[entry_idx] = (mask & buffer[entry_idx]) | ((val & 0x1) << bit_shift);
     }
 
 }// namespace sat4gpu
+
+#endif//SAT4GPU_MATH_HPP

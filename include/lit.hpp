@@ -44,6 +44,7 @@ namespace sat4gpu {
 
         bool operator==(const Lit &) const;
         bool operator!=(const Lit &) const;
+        bool operator<(const Lit &) const;
 
         [[nodiscard]] bool eval(bool var_assignment) const;
 

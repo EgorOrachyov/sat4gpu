@@ -22,66 +22,64 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include "cpu_naive_comb_backend.hpp"
+#include "cpu_matsat_backend.hpp"
 
-#include <cassert>
+#include "cpu_matsat_funcs.hpp"
+
+#include <random>
+#include <vector>
 
 namespace sat4gpu {
 
-    void CpuNaiveCombBackend::configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) {
-        m_vars = vars;
-        m_clauses = clauses;
+    void CpuMatsatBackend::configure(const class Solver &solver) {
+        const int n = solver.num_vars();
+        const int m = solver.num_clauses();
+
+        MatSat::build_matrix_Q(solver.clauses(), n, solver.num_lits(), m_Q);
+        MatSat::build_matrix_Q2_Q1_T(solver.clauses(), n, solver.num_lits(), m_Q2_Q1_T);
+
+        m_u.resize(n);
+        m_u_tilda.resize(n);
+        m_u_tilda_new.resize(n);
+        m_J_sat_acb.resize(n);
+        m_Q_u_tilda_d.resize(m);
     }
-    Solution CpuNaiveCombBackend::solve(int timeout) {
-        m_try_assignment.clear();
-        m_try_assignment.resize(m_vars.size(), false);
 
-        const bool is_solved = try_solve_recursive(0);
+    Solution CpuMatsatBackend::solve(int timeout) {
+        std::default_random_engine engine(m_uniform_seed);
 
-        Solution solution;
-        solution.conclusion = is_solved ? Conclusion::Satisfiable : Conclusion::Unsatisfiable;
-        solution.model = is_solved ? std::optional(m_try_assignment) : std::nullopt;
+        MatSat::randomize_vec_uniform(1.0f, engine, m_u_tilda);
 
-        return solution;
-    }
-    bool CpuNaiveCombBackend::try_solve_recursive(int var_idx) {
-        assert(var_idx <= m_vars.size());
+        for (int p = 0; p < m_max_try; p++) {
+            for (int q = 0; q < m_max_itr; q++) {
+                MatSat::eval_matvec_Q_u_tilda_d(m_Q, m_u_tilda, m_Q_u_tilda_d);
+                MatSat::eval_J_sat(m_u_tilda, m_Q, m_Q_u_tilda_d, m_l, m_J_sat);              // J_sat by (1)
+                MatSat::eval_J_sat_acb(m_Q2_Q1_T, m_u_tilda, m_Q_u_tilda_d, m_l, m_J_sat_acb);// J_sat_acb by (2)
+                MatSat::eval_u_tilda_new(m_u_tilda, m_J_sat_acb, m_J_sat, m_u_tilda_new);     // update u~ by (3)
 
-        if (var_idx == m_vars.size()) {
-            auto iter = m_clauses.begin();
-            const auto iter_end = m_clauses.end();
+                std::swap(m_u_tilda, m_u_tilda_new);
 
-            while (iter != iter_end) {
-                const Clause &clause = *iter;
+                MatSat::eval_matvec_Q_u_d_min_error(m_Q, m_u_tilda, m_theta_slice, m_u, m_error);// threshold u~ to binary vector u, compute error
 
-                if (!clause.eval(m_try_assignment)) {
-                    return false;
+                if (m_error == 0) {
+                    Solution solution;
+                    solution.conclusion = Conclusion::Satisfiable;
+                    solution.model = m_u.to_bool();
+                    return solution;
                 }
-
-                ++iter;
             }
 
-            return true;
+            MatSat::randomize_vec_uniform(m_beta, engine, m_u_tilda);// % 0 <= beta <= 1, rnd ~ U(0,1)
         }
 
-        m_try_assignment[var_idx] = true;
-        if (try_solve_recursive(var_idx + 1)) {
-            return true;
-        }
-
-        m_try_assignment[var_idx] = false;
-        if (try_solve_recursive(var_idx + 1)) {
-            return true;
-        }
-
-        return false;
-    }
-    BackendType CpuNaiveCombBackend::backend_type() const {
-        return BackendType::CpuNaiveComb;
-    }
-    std::shared_ptr<Backend> CpuNaiveCombBackend::instantiate() const {
-        return std::make_shared<CpuNaiveCombBackend>();
+        return Solution{};
     }
 
+    BackendType CpuMatsatBackend::backend_type() const {
+        return BackendType::CpuMatsat;
+    }
+    std::shared_ptr<Backend> CpuMatsatBackend::instantiate() const {
+        return std::make_shared<CpuMatsatBackend>();
+    }
 
 }// namespace sat4gpu

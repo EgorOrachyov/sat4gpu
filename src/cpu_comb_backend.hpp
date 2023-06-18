@@ -22,19 +22,19 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SAT4GPU_CPU_NAIVE_COMB_BACKEND_HPP
-#define SAT4GPU_CPU_NAIVE_COMB_BACKEND_HPP
+#ifndef SAT4GPU_CPU_COMB_BACKEND_HPP
+#define SAT4GPU_CPU_COMB_BACKEND_HPP
 
 #include "backend.hpp"
 #include "solver.hpp"
 
 namespace sat4gpu {
 
-    class CpuNaiveCombBackend final : public Backend {
+    class CpuCombBackend final : public Backend {
     public:
-        ~CpuNaiveCombBackend() override = default;
+        ~CpuCombBackend() override = default;
 
-        void configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) override;
+        void configure(const class Solver &solver) override;
         Solution solve(int timeout) override;
 
         [[nodiscard]] BackendType backend_type() const override;
@@ -51,4 +51,4 @@ namespace sat4gpu {
 
 }// namespace sat4gpu
 
-#endif//SAT4GPU_CPU_NAIVE_COMB_BACKEND_HPP
+#endif//SAT4GPU_CPU_COMB_BACKEND_HPP

@@ -36,17 +36,16 @@
 namespace sat4gpu {
 
     enum class BackendType {
-        CpuNaiveComb = 0,
-        CpuNaiveLinAlg,
-        GpuCudaLinAlg,
-        Custom
+        CpuComb = 0,
+        CpuMatsat,
+        CudaMatsat
     };
 
     class Backend {
     public:
         virtual ~Backend() = default;
 
-        virtual void configure(const std::vector<Var> &vars, const std::vector<Clause> &clauses) = 0;
+        virtual void configure(const class Solver &solver) = 0;
         virtual Solution solve(int timeout) = 0;
 
         [[nodiscard]] virtual BackendType backend_type() const = 0;

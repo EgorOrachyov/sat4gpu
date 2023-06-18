@@ -8,4 +8,5 @@ endfunction()
 
 test_target(test_api)
 test_target(test_io)
-test_target(test_solve)
+test_target(test_naive)
+test_target(test_matsat)

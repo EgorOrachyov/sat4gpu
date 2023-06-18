@@ -152,8 +152,15 @@ add_library(sat4gpu STATIC
         include/solution.hpp
         include/solver.hpp
         include/var.hpp
-        src/cpu_naive_comb_backend.cpp
-        src/cpu_naive_comb_backend.hpp
+        src/math.hpp
+        src/cpu_comb_backend.cpp
+        src/cpu_comb_backend.hpp
+        src/cpu_matsat_backend.cpp
+        src/cpu_matsat_backend.hpp
+        src/cpu_matsat_funcs.cpp
+        src/cpu_matsat_funcs.hpp
+        src/cpu_structs.cpp
+        src/cpu_structs.hpp
         src/cuda_backend.cu
         src/cuda_backend.cuh
         src/io.cpp

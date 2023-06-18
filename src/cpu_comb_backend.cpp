@@ -22,57 +22,66 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include "clause.hpp"
+#include "cpu_comb_backend.hpp"
 
-#include <algorithm>
+#include <cassert>
 
 namespace sat4gpu {
 
-    Clause::Clause(const std::vector<Lit> &lits, int offset, std::vector<Lit> *lit_buffer) {
-        assert(lit_buffer);
-        assert(!lits.empty());
+    void CpuCombBackend::configure(const class Solver &solver) {
+        m_vars = solver.vars();
+        m_clauses = solver.clauses();
+    }
+    Solution CpuCombBackend::solve(int timeout) {
+        m_try_assignment.clear();
+        m_try_assignment.resize(m_vars.size(), false);
 
-        m_offset = offset;
-        m_count = int(lits.size());
-        m_lit_buffer = lit_buffer;
+        const bool is_solved = try_solve_recursive(0);
 
-        for (int i = 0; i < m_count; i++) {
-            (*lit_buffer)[m_offset + i] = lits[i];
+        Solution solution;
+        solution.conclusion = is_solved ? Conclusion::Satisfiable : Conclusion::Unsatisfiable;
+        solution.model = is_solved ? std::optional(m_try_assignment) : std::nullopt;
+
+        return solution;
+    }
+    bool CpuCombBackend::try_solve_recursive(int var_idx) {
+        assert(var_idx <= m_vars.size());
+
+        if (var_idx == m_vars.size()) {
+            auto iter = m_clauses.begin();
+            const auto iter_end = m_clauses.end();
+
+            while (iter != iter_end) {
+                const Clause &clause = *iter;
+
+                if (!clause.eval(m_try_assignment)) {
+                    return false;
+                }
+
+                ++iter;
+            }
+
+            return true;
         }
 
-        std::sort(lit_buffer->data() + m_offset, lit_buffer->data() + m_offset + m_count);
-    }
-
-    bool Clause::eval(const std::vector<bool> &assignments) const {
-        bool satisfied = false;
-
-        auto iter = begin();
-        const auto iter_end = end();
-
-        while (iter != iter_end && !satisfied) {
-            const Lit &lit = *iter;
-            const Var lit_var = lit.var();
-            const bool var_assignment = assignments[lit_var.id];
-
-            satisfied = lit.eval(var_assignment);
-
-            ++iter;
+        m_try_assignment[var_idx] = true;
+        if (try_solve_recursive(var_idx + 1)) {
+            return true;
         }
 
-        return satisfied;
+        m_try_assignment[var_idx] = false;
+        if (try_solve_recursive(var_idx + 1)) {
+            return true;
+        }
+
+        return false;
+    }
+    BackendType CpuCombBackend::backend_type() const {
+        return BackendType::CpuComb;
+    }
+    std::shared_ptr<Backend> CpuCombBackend::instantiate() const {
+        return std::make_shared<CpuCombBackend>();
     }
 
-    Lit *Clause::begin() {
-        return m_lit_buffer->data() + m_offset;
-    }
-    Lit *Clause::end() {
-        return m_lit_buffer->data() + m_offset + m_count;
-    }
-    const Lit *Clause::begin() const {
-        return m_lit_buffer->data() + m_offset;
-    }
-    const Lit *Clause::end() const {
-        return m_lit_buffer->data() + m_offset + m_count;
-    }
 
 }// namespace sat4gpu
